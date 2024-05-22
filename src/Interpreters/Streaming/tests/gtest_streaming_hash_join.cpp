@@ -826,6 +826,56 @@ TEST(StreamingHashJoin, SimpleJoinTests)
     }
 }
 
+TEST(StreamingHashJoin, AppendLeftAllJoinAppend)
+{
+    auto context = getContext().context;
+    Block left_header = prepareBlock(/*types*/ {"int", "datetime64(3, 'UTC')"}, /*no data*/ "", context);
+    Block right_header = prepareBlock(/*types*/ {"int", "datetime64(3, 'UTC')"}, /*no data*/ "", context);
+
+    /// stream(t1) left all join stream(t2) on t1.col_1 = t2.col_1
+    commonTest(
+        "left",
+        "all",
+        /*on_clause*/ "t1.col_1 = t2.col_1",
+        left_header,
+        Streaming::StorageSemantic::Append,
+        /*left_primary_key_column_indexes*/ std::nullopt,
+        right_header,
+        Streaming::StorageSemantic::Append,
+        /*right_primary_key_column_indexes*/ std::nullopt,
+        /*to_join_steps*/
+        {
+            {
+                /*to join pos*/ ToJoinStep::LEFT,
+                /*to join block*/ prepareBlockByHeader(left_header, "(1, '2023-1-1 00:00:00')", context),
+                /*expected join results*/
+                ExpectedJoinResults{
+                    /// output header: col_1, col_2, t2.col_2
+                    .values = "(1, '2023-1-1 00:00:00', '1970-1-1 00:00:00')",
+                },
+            },
+            {
+                /*to join pos*/ ToJoinStep::RIGHT,
+                /*to join block*/ prepareBlockByHeader(right_header, "(1, '2023-1-1 00:00:01')", context),
+                /*expected join results*/
+                ExpectedJoinResults{
+                    /// output header: col_1, col_2, t2.col_2
+                    .values = "(1, '2023-1-1 00:00:00', '2023-1-1 00:00:01')",
+                },
+            },
+            {
+                /*to join pos*/ ToJoinStep::LEFT,
+                /*to join block*/ prepareBlockByHeader(left_header, "(1, '2023-1-1 00:00:02')", context),
+                /*expected join results*/
+                ExpectedJoinResults{
+                    /// output header: col_1, col_2, t2.col_2
+                    .values = "(1, '2023-1-1 00:00:02', '2023-1-1 00:00:01')",
+                },
+            },
+        },
+        context);
+}
+
 TEST(StreamingHashJoin, AppendLeftAsofJoinAppend)
 {
     auto context = getContext().context;

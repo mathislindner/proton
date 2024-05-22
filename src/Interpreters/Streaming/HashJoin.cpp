@@ -788,6 +788,7 @@ const HashJoin::SupportMatrix HashJoin::support_matrix = {
     {{StorageSemantic::Append, JoinKind::Left, JoinStrictness::All, StorageSemantic::ChangelogKV}, true},
     {{StorageSemantic::Append, JoinKind::Left, JoinStrictness::All, StorageSemantic::VersionedKV}, true},
     {{StorageSemantic::Append, JoinKind::Left, JoinStrictness::All, StorageSemantic::Changelog}, true},
+    {{StorageSemantic::Append, JoinKind::Left, JoinStrictness::All, StorageSemantic::Append}, true},
 
     {{StorageSemantic::Append, JoinKind::Left, JoinStrictness::Asof, StorageSemantic::Append}, true},
     {{StorageSemantic::Append, JoinKind::Left, JoinStrictness::Asof, StorageSemantic::VersionedKV}, true},
